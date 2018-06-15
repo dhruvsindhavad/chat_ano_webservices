@@ -1,10 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="ISO-8859-1">
-<title>Insert title here</title>
+	<title>Chat App example</title>
+	<link rel="stylesheet" type="text/css" href="/resources/css/style.css">
 </head>
 <body>
-hello
+
+	<div class="chatbox">
+		<div class="cls_information_box" id="id_information_box">
+			<p class="cls_information" id='id_information'>Connecting...</p>
+		</div>
+		<div class="chatlogs" id="id_chat_logs">
+			<div class="chat friend">
+				<div class="user-photo"></div>
+				<p class="chat-message">What's up, Brother ..!!</p>	
+			</div>
+			<div class="chat self">
+				<div class="user-photo"></div>
+				<p class="chat-message">What's up ..!!</p>	
+			</div>
+		</div>
+		<div class="chat-form">
+			<textarea id='txt_texbox'></textarea>
+			<button id ="btn_send">Send</button>
+		</div>
+	</div>
+
+	<script src='/resources/js/jquery-3.3.1.js'></script>
+	<script type="text/javascript">
+		window.onload = function()
+		{;
+			document.getElementById("txt_texbox").focus()
+			document.getElementById("txt_texbox").addEventListener("keyup",keyupHandler,false);
+			document.getElementById("btn_send").addEventListener('click',clickHandler,false);
+			div_chat_logs=document.getElementById("id_chat_logs");
+			connect();
+		};
+		
+		function keyupHandler(event)
+		{
+			event.preventDefault();
+			if (event.keyCode == 13) 
+			{
+				addChatSelf(document.getElementById("txt_texbox"));
+			}
+		}
+		
+		function clickHandler()
+		{
+			addChatSelf(document.getElementById("txt_texbox"));
+		}
+		
+		function addChatSelf(msg)
+		{	
+			if(null != msg.value && msg.value.trim() != "" )
+			{
+				div_new = '<div class="chat self">';
+				div_new += '<div class="user-photo"></div>';
+				div_new += '<p class="chat-message">' + msg.value + '</p>'
+				div_new += '</div >';
+				div_chat_logs.innerHTML=div_chat_logs.innerHTML + div_new;
+				msg.value="";
+				div_chat_logs.scrollTop = div_chat_logs.scrollHeight;
+			}
+			else
+			{
+				msg.value="";
+			}
+		}
+		
+		function connect() {
+			ws = new WebSocket('ws://localhost:8080/temp');
+			ws.onopen = function(evt) {console.log("Connected"); onOpen(evt); };
+			ws.onmessage = function(data){
+				showGreeting(data.data);
+			}
+		}
+		
+		function onOpen(evt)
+		{
+			ws.send("text");
+		}
+		function disconnect() {
+		    if (ws != null) {
+		        ws.close();
+		    }		  
+		    console.log("Disconnected");
+		}
+		
+		function showGreeting(message) {
+			addChatSelf(message)
+		}
+		
+		
+	</script>
 </body>
 </html>
