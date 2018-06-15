@@ -60,6 +60,7 @@
 				div_new += '<p class="chat-message">' + msg.value + '</p>'
 				div_new += '</div >';
 				div_chat_logs.innerHTML=div_chat_logs.innerHTML + div_new;
+				ws.send(msg.value);
 				msg.value="";
 				div_chat_logs.scrollTop = div_chat_logs.scrollHeight;
 			}
@@ -69,17 +70,34 @@
 			}
 		}
 		
+		function addChatFriend(msg)
+		{
+			if(null != msg && msg.trim() != "" )
+			{
+				div_new = '<div class="chat friend">';
+				div_new += '<div class="user-photo"></div>';
+				div_new += '<p class="chat-message">' + msg + '</p>'
+				div_new += '</div >';
+				div_chat_logs.innerHTML=div_chat_logs.innerHTML + div_new;
+				msg.value="";
+				div_chat_logs.scrollTop = div_chat_logs.scrollHeight;
+			}
+			else
+			{
+				msg.value="";
+			}
+		}
 		function connect() {
 			ws = new WebSocket('ws://localhost:8080/temp');
 			ws.onopen = function(evt) {console.log("Connected"); onOpen(evt); };
 			ws.onmessage = function(data){
-				showGreeting(data.data);
+				addChatFriend(data.data);
 			}
 		}
 		
 		function onOpen(evt)
 		{
-			ws.send("text");
+			
 		}
 		function disconnect() {
 		    if (ws != null) {
@@ -87,12 +105,7 @@
 		    }		  
 		    console.log("Disconnected");
 		}
-		
-		function showGreeting(message) {
-			addChatSelf(message)
-		}
-		
-		
+
 	</script>
 </body>
 </html>
