@@ -8,32 +8,26 @@
 
 	<div class="chatbox">
 		<div class="cls_information_box" id="id_information_box">
-			<p class="cls_information" id='id_information'>Connecting...</p>
+			<p class="cls_information" id='id_information'>Connecting to server...</p>
 		</div>
 		<div class="chatlogs" id="id_chat_logs">
-			<div class="chat friend">
-				<div class="user-photo"></div>
-				<p class="chat-message">What's up, Brother ..!!</p>	
-			</div>
-			<div class="chat self">
-				<div class="user-photo"></div>
-				<p class="chat-message">What's up ..!!</p>	
-			</div>
 		</div>
 		<div class="chat-form">
-			<textarea id='txt_texbox'></textarea>
-			<button id ="btn_send">Send</button>
+			<textarea id="txt_texbox" disabled></textarea>
+			<button id ="btn_command">Disconnect</button>
 		</div>
 	</div>
-
-	<script src='/resources/js/jquery-3.3.1.js'></script>
+	
 	<script type="text/javascript">
+		var ws=null;
 		window.onload = function()
 		{;
-			document.getElementById("txt_texbox").focus()
-			document.getElementById("txt_texbox").addEventListener("keyup",keyupHandler,false);
-			document.getElementById("btn_send").addEventListener('click',clickHandler,false);
+			txt_texbox = document.getElementById("txt_texbox");
+			btn_command = document.getElementById("btn_command");
+			elm_information=document.getElementById("id_information");
 			div_chat_logs=document.getElementById("id_chat_logs");
+			txt_texbox.addEventListener("keyup",keyupHandler,false);
+			btn_command.addEventListener('click',commandHandler,false);
 			connect();
 		};
 		
@@ -46,9 +40,57 @@
 			}
 		}
 		
-		function clickHandler()
+		function messageHandler(data)
 		{
-			addChatSelf(document.getElementById("txt_texbox"));
+			console.log(data.data);
+			var obj = JSON.parse(data.data);
+			if(null != obj)
+			{
+				if(obj.from=="System")
+				{
+					handleSystemMessage(obj.message);
+				}
+				else
+				{
+					addChatStranger(obj.message);
+				}
+			}
+		} 
+		
+		function handleSystemMessage(message)
+		{
+			console.log("into handleSystemMessage " + message);
+			if(message=="PartnerDisconnection")
+			{
+				console.log("PartnerDisconnection");
+				elm_information.innerHTML ="Stranger disconnected";
+				txt_texbox.disabled=true;
+				btn_command.innerHTML="Connect";
+				disconnect();
+			}
+			else if(message=="PartnerConnection")
+			{
+				console.log("PartnerConnection");
+				txt_texbox.disabled=false;
+				elm_information.innerHTML="Connected with stranger"
+				btn_command.innerHTML="Disconnect";
+			}
+		}
+		
+		function commandHandler()
+		{ 
+			console.log("into commandHandler  " + btn_command.innerHTML)
+			if(btn_command.innerHTML=="Disconnect")
+			{
+				elm_information.innerHTML ="You've disconnected";
+				txt_texbox.disabled=true;
+				btn_command.innerHTML="Connect";
+				disconnect();
+			}
+			else if(btn_command.innerHTML=="Connect")
+			{
+				location.reload();
+			}
 		}
 		
 		function addChatSelf(msg)
@@ -70,7 +112,7 @@
 			}
 		}
 		
-		function addChatFriend(msg)
+		function addChatStranger(msg)
 		{
 			if(null != msg && msg.trim() != "" )
 			{
@@ -87,25 +129,27 @@
 				msg.value="";
 			}
 		}
-		function connect() {
-			ws = new WebSocket('ws://localhost:8080/temp');
-			ws.onopen = function(evt) {console.log("Connected"); onOpen(evt); };
-			ws.onmessage = function(data){
-				addChatFriend(data.data);
-			}
-		}
 		
 		function onOpen(evt)
 		{
-			
+			elm_information.innerHTML ="Connecting to stranger... "
 		}
+		 
+		function connect() {
+			disconnect();
+			ws = new WebSocket('ws://localhost:8080/ano');
+			ws.onopen = function(evt) {onOpen(evt); };
+			ws.onmessage = function(data){
+				messageHandler(data)
+			}
+		}
+		
 		function disconnect() {
 		    if (ws != null) {
 		        ws.close();
+				ws=null;
 		    }		  
-		    console.log("Disconnected");
 		}
-
 	</script>
 </body>
 </html>
